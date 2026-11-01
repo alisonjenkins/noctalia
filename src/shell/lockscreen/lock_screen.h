@@ -184,7 +184,6 @@ private:
   bool m_lockStarting = false;
   bool m_desktopCapturesPrimed = false;
   std::uint64_t m_desktopCaptureGeneration = 0;
-  bool m_lockDeferred = false;
   bool m_transitionSuppressed = false;
   bool m_unlocking = false;
   bool m_unlockFinishQueued = false;
