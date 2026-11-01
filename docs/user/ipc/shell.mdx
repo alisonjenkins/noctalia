@@ -77,3 +77,5 @@ Snapshots are intentionally frozen for each switcher session rather than streame
 | Reboot           | <IpcCommand command="session reboot" />           | Reboot the system.                                                                              |
 | Reboot to UEFI   | <IpcCommand command="session reboot-uefi" />      | Reboot into the UEFI firmware setup (requires systemd and a UEFI boot).                         |
 | Shut down        | <IpcCommand command="session shutdown" />         | Shut down the system.                                                                           |
+
+`session lock` accepts `--grace <seconds>` (`0`–`60`) to replace `lockscreen.grace_period_seconds` for that one lock; `--grace 0` requires a password immediately. This lets an explicit lock skip the passwordless window while idle-triggered locks keep it. Without the flag the configured value applies, and the flag is ignored if the session is already locked. The override is dropped if the lock is deferred because no output is connected, or once the session sleeps.

@@ -210,6 +210,9 @@ namespace noctalia::cli {
           true
       },
   };
+  inline constexpr std::array kMsgSessionFlags{
+      Flag{"--grace", {}, "<seconds>", "For lock: grace period for this call, 0-60 (0 = none)", {}, {}, false, false},
+  };
   inline constexpr std::array kMsgSessionPositionals{
       Positional{"action", {}, kMsgSessionActionChoices, true, false, false},
   };
@@ -747,7 +750,7 @@ namespace noctalia::cli {
         "screenshot-window", "Capture the focused window", {}, {}, kMsgScreenshotFlags, {}, {}, false
     };
     inline constexpr Command session{"session", "Run a built-in session action", {}, {},
-                                     {},        kMsgSessionPositionals,          {}, false};
+                                     kMsgSessionFlags, kMsgSessionPositionals, {}, false};
     inline constexpr Command settingsClose{"settings-close", "Close the settings window", {}, {}, {}, {}, {}, false};
     inline constexpr Command settingsOpen{
         "settings-open",
