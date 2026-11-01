@@ -52,7 +52,9 @@ public:
   void setLoginBoxServices(
       SessionActionRunner* sessionActions, MprisService* mpris, const WeatherService* weather, HttpClient* httpClient
   );
-  bool lock();
+  /// `graceSecondsOverride` replaces lockscreen.grace_period_seconds (0 = none) when this call starts
+  /// the lock; it is ignored if a lock is already active.
+  bool lock(std::optional<int> graceSecondsOverride = std::nullopt);
   void primeDesktopCaptures();
   void clearPrimedDesktopCaptures();
   void unlock();
@@ -210,6 +212,7 @@ private:
   // CLOCK_BOOTTIME millis when the lock flow started; grace expires gracePeriodSeconds after it.
   std::int64_t m_lockedAtMillis = 0;
   bool m_graceAllowed = false;
+  std::optional<int> m_graceSecondsOverride;
   // CLOCK_BOOTTIME millis of the last resume or output power-on; guards wake keys.
   std::int64_t m_wokeAtMillis = 0;
   double m_pointerEnterX = 0.0;

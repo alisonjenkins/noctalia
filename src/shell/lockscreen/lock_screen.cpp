@@ -160,7 +160,7 @@ void LockScreen::setLoginBoxServices(
   }
 }
 
-bool LockScreen::lock() {
+bool LockScreen::lock(std::optional<int> graceSecondsOverride) {
   if (m_wayland == nullptr || m_renderContext == nullptr) {
     invalidateDesktopCaptures();
     notifyLockAborted();
@@ -180,6 +180,7 @@ bool LockScreen::lock() {
   }
   m_lockedAtMillis = bootTimeMillis();
   m_graceAllowed = true;
+  m_graceSecondsOverride = graceSecondsOverride;
   kLog.debug("lock requested, grace starts at {}", m_lockedAtMillis);
   if (!m_wayland->hasSessionLockManager()) {
     invalidateDesktopCaptures();
@@ -608,13 +609,17 @@ bool LockScreen::isInGracePeriod() const noexcept {
   if (!m_graceAllowed || !m_locked || m_lockedAtMillis <= 0) {
     return false;
   }
-  if (m_configService == nullptr || m_configService->config().lockscreen.gracePeriodSeconds <= 0) {
+  if (m_configService == nullptr) {
+    return false;
+  }
+  const std::int64_t graceSeconds =
+      m_graceSecondsOverride.value_or(m_configService->config().lockscreen.gracePeriodSeconds);
+  if (graceSeconds <= 0) {
     return false;
   }
   // Boottime deadline, evaluated fresh on every interaction: a cached timestamp
   // would keep the grace window alive indefinitely.
-  const std::int64_t windowMillis =
-      static_cast<std::int64_t>(m_configService->config().lockscreen.gracePeriodSeconds) * 1000;
+  const std::int64_t windowMillis = graceSeconds * 1000;
   return bootTimeMillis() < m_lockedAtMillis + windowMillis;
 }
 
@@ -629,6 +634,7 @@ void LockScreen::tryGraceUnlock() {
 void LockScreen::resetGracePeriod() {
   m_lockedAtMillis = 0;
   m_graceAllowed = false;
+  m_graceSecondsOverride.reset();
 }
 
 void LockScreen::onSystemResumed() {
