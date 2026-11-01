@@ -2567,6 +2567,10 @@
           "description": "Allow passwordless unlock for this many seconds after locking; any keypress or mouse movement unlocks. Set to 0 to always require the password",
           "label": "Grace Period"
         },
+        "grace-period-idle-only": {
+          "description": "Only allow the grace period after an idle lock; locking by hand (buttons, keybinds, loginctl) requires the password at once",
+          "label": "Grace Period Only After Idle"
+        },
         "lock-before-suspend": {
           "description": "Lock the session before sleep (lid close, systemctl suspend, hibernate); Lock & Suspend actions still lock first",
           "label": "Lock Before Suspend"

@@ -52,9 +52,12 @@ public:
   void setLoginBoxServices(
       SessionActionRunner* sessionActions, MprisService* mpris, const WeatherService* weather, HttpClient* httpClient
   );
+  /// Who asked for the lock; lockscreen.grace_period_idle_only limits the grace window to Idle.
+  enum class LockOrigin : std::uint8_t { Explicit, Idle };
+
   /// `graceSecondsOverride` replaces lockscreen.grace_period_seconds (0 = none) when this call starts
   /// the lock; it is ignored if a lock is already active.
-  bool lock(std::optional<int> graceSecondsOverride = std::nullopt);
+  bool lock(std::optional<int> graceSecondsOverride = std::nullopt, LockOrigin origin = LockOrigin::Explicit);
   void primeDesktopCaptures();
   void clearPrimedDesktopCaptures();
   void unlock();

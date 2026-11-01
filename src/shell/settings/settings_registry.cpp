@@ -1801,6 +1801,16 @@ namespace settings {
     }
     {
       auto e = makeEntry(
+          SettingsSection::LockScreen, "general", tr("settings.schema.lockscreen.grace-period-idle-only.label"),
+          tr("settings.schema.lockscreen.grace-period-idle-only.description"),
+          {"lockscreen", "grace_period_idle_only"}, ToggleSetting{cfg.lockscreen.gracePeriodIdleOnly},
+          "lock screen grace period idle only explicit manual lock button passwordless"
+      );
+      e.visibleWhen = [](const Config& c) { return c.lockscreen.enabled && c.lockscreen.gracePeriodSeconds > 0; };
+      entries.push_back(std::move(e));
+    }
+    {
+      auto e = makeEntry(
           SettingsSection::LockScreen, "general", tr("settings.schema.lockscreen.monitors.label"),
           tr("settings.schema.lockscreen.monitors.description"), {"lockscreen", "monitors"},
           ListSetting{.items = cfg.lockscreen.monitors, .suggestedOptions = env.availableOutputs},

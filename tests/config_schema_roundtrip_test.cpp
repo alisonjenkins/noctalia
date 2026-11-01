@@ -375,6 +375,7 @@ location = "https://example.invalid/bad"
     c.lockscreen = LockscreenConfig{
         .lockBeforeSuspend = false,
         .gracePeriodSeconds = 3,
+        .gracePeriodIdleOnly = true,
         .blurredDesktop = true,
         .transitions = {LockscreenTransition::Disc, LockscreenTransition::Zoom},
         .transitionDurationMs = 900.0F,
@@ -748,6 +749,9 @@ location = "https://example.invalid/bad"
       readInto(explicitZero, zero, lockscreenSchema(), "lockscreen", dZero);
       if (zero.gracePeriodSeconds != 0) {
         fail("lockscreen.grace_period_seconds: explicit 0 must stay disabled");
+      }
+      if (lockscreen.gracePeriodIdleOnly) {
+        fail("lockscreen.grace_period_idle_only: missing key must default to false (existing behaviour)");
       }
     }
     // Clipboard history count accepts large text-heavy histories but still has

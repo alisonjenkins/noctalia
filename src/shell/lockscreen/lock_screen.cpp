@@ -160,7 +160,7 @@ void LockScreen::setLoginBoxServices(
   }
 }
 
-bool LockScreen::lock(std::optional<int> graceSecondsOverride) {
+bool LockScreen::lock(std::optional<int> graceSecondsOverride, LockOrigin origin) {
   if (m_wayland == nullptr || m_renderContext == nullptr) {
     invalidateDesktopCaptures();
     notifyLockAborted();
@@ -181,6 +181,10 @@ bool LockScreen::lock(std::optional<int> graceSecondsOverride) {
   m_lockedAtMillis = bootTimeMillis();
   m_graceAllowed = true;
   m_graceSecondsOverride = graceSecondsOverride;
+  if (!m_graceSecondsOverride.has_value() && origin != LockOrigin::Idle && m_configService != nullptr
+      && m_configService->config().lockscreen.gracePeriodIdleOnly) {
+    m_graceSecondsOverride = 0;
+  }
   kLog.debug("lock requested, grace starts at {}", m_lockedAtMillis);
   if (!m_wayland->hasSessionLockManager()) {
     invalidateDesktopCaptures();

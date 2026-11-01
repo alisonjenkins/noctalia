@@ -596,6 +596,10 @@ struct LockscreenConfig {
   // additionally revoked on sleep transitions (PrepareForSleep, Lock & Suspend)
   // and on logind resume as a defense in depth.
   int gracePeriodSeconds = 0;
+  // Limit the grace window to idle-triggered locks. Explicit locks (buttons, keybinds,
+  // `loginctl lock-session`, IPC) then require the password at once. A per-call
+  // `msg session lock --grace` still overrides this.
+  bool gracePeriodIdleOnly = false;
   bool fingerprint = true;
   bool allowEmptyPassword = false;
   bool blurredDesktop = false;

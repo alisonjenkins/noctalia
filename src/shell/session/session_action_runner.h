@@ -26,6 +26,7 @@ public:
   void setPowerConfig(const ShellSessionConfig::ShellSessionPowerConfig& power);
   void invoke(const SessionPanelActionConfig& cfg) const;
   [[nodiscard]] bool lock() const;
+  [[nodiscard]] bool lockForIdle() const;
   [[nodiscard]] bool requestSuspendDetached() const;
   [[nodiscard]] bool requestRebootDetached() const;
   [[nodiscard]] bool requestRebootUefiDetached() const;
