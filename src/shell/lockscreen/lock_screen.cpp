@@ -187,16 +187,6 @@ bool LockScreen::lock() {
     notifyLockAborted();
     return false;
   }
-  if (!hasUsableOutput(*m_wayland)) {
-    m_lockDeferred = true;
-    kLog.warn("no outputs available for lock screen; lock deferred until an output is connected");
-    // No output can ever show a lock surface, so run any pending post-lock action (e.g. suspend)
-    // immediately instead of holding it until a monitor reconnects.
-    dispatchPendingAfterLocked();
-    flushPendingOutputPowerOff();
-    return true;
-  }
-
   m_lockStarting = true;
 
   if (m_desktopCapturesPrimed) {
@@ -206,15 +196,6 @@ bool LockScreen::lock() {
     if (shouldCaptureDesktop()) {
       (void)captureDesktopSnapshots();
     }
-  }
-
-  if (!hasUsableOutput(*m_wayland)) {
-    m_lockStarting = false;
-    m_lockDeferred = true;
-    kLog.warn("outputs disappeared while preparing lock screen; lock deferred until an output is connected");
-    dispatchPendingAfterLocked();
-    flushPendingOutputPowerOff();
-    return true;
   }
 
   if (!m_transitionSuppressed
@@ -247,8 +228,10 @@ bool LockScreen::lock() {
   m_status = i18n::tr("lockscreen.waiting");
   m_statusIsError = false;
   syncInstances();
-  if (m_instances.empty()) {
-    kLog.warn("no outputs available for lock screen");
+  // With no usable output the compositor still locks and surfaces follow as outputs appear. With a
+  // usable output but no surface the screen would lock with nothing to type a password into.
+  if (m_instances.empty() && hasUsableOutput(*m_wayland)) {
+    kLog.warn("failed to create a lock surface for any usable output");
     resetLockState();
     notifyLockAborted();
     return false;
@@ -259,7 +242,6 @@ bool LockScreen::lock() {
 }
 
 void LockScreen::unlock() {
-  m_lockDeferred = false;
   cancelPendingAfterLocked();
   cancelOutputPowerOff();
   if (!isActive()) {
@@ -372,13 +354,6 @@ void LockScreen::forceRepaintAfterResume() {
 void LockScreen::onOutputChange() {
   if (!isActive()) {
     invalidateDesktopCaptures();
-  }
-  if (m_lockDeferred) {
-    if (m_wayland != nullptr && !m_wayland->outputs().empty()) {
-      m_lockDeferred = false;
-      (void)lock();
-    }
-    return;
   }
   if (!isActive()) {
     return;
@@ -679,7 +654,7 @@ void LockScreen::onOutputPowerChanged() {
     markOutputsWoke();
     return;
   }
-  if (isActive() || m_lockStarting || m_lockDeferred) {
+  if (isActive() || m_lockStarting) {
     suppressEntryTransition();
   } else if (m_configService == nullptr || !m_configService->config().lockscreen.blurredDesktop) {
     invalidateDesktopCaptures();
@@ -696,9 +671,6 @@ void LockScreen::prepareForOutputPowerOff(std::function<void(bool)> done) {
     return;
   }
   if (!isActive() && !m_lockStarting) {
-    if (m_lockDeferred) {
-      suppressEntryTransition();
-    }
     if (m_configService == nullptr || !m_configService->config().lockscreen.blurredDesktop) {
       invalidateDesktopCaptures();
     }
@@ -836,7 +808,7 @@ void LockScreen::dispatchPendingAfterLocked(bool timedOut) {
     const auto generation = m_afterLockedGeneration;
     const std::weak_ptr<void> guard = m_aliveGuard;
     DeferredCall::callLater([this, guard, generation, timedOut, pending = std::move(pending)] mutable {
-      if (guard.expired() || generation != m_afterLockedGeneration || m_unlocking || (!isActive() && !m_lockDeferred)) {
+      if (guard.expired() || generation != m_afterLockedGeneration || m_unlocking || !isActive()) {
         return;
       }
       if (!timedOut && isActive() && !isReadyForSleep()) {
@@ -1351,7 +1323,6 @@ void LockScreen::resetLockState() {
   cancelPendingAfterLocked();
   cancelOutputPowerOff();
   m_unlockTransitionTimer.stop();
-  m_lockDeferred = false;
   m_lockStarting = false;
   m_transitionSuppressed = false;
   m_unlocking = false;
