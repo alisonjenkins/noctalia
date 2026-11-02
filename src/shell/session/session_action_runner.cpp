@@ -200,9 +200,9 @@ namespace {
     return std::filesystem::is_directory("/sys/firmware/efi", ec) && process::commandExists("systemctl");
   }
 
-  [[nodiscard]] bool requestLock(LockScreen& lockScreen) {
+  [[nodiscard]] bool requestLock(LockScreen& lockScreen, LockScreen::LockOrigin origin) {
     logActionContext("lock");
-    if (!lockScreen.lock()) {
+    if (!lockScreen.lock(std::nullopt, origin)) {
       kLog.warn("lock: lock screen request failed");
       return false;
     }
@@ -315,7 +315,9 @@ std::function<bool()> SessionActionRunner::hookFor(std::string_view action) cons
   return {};
 }
 
-bool SessionActionRunner::lock() const { return requestLock(m_lockScreen); }
+bool SessionActionRunner::lock() const { return requestLock(m_lockScreen, LockScreen::LockOrigin::Explicit); }
+
+bool SessionActionRunner::lockForIdle() const { return requestLock(m_lockScreen, LockScreen::LockOrigin::Idle); }
 
 bool SessionActionRunner::requestSuspendDetached() const {
   logActionContext("suspend");

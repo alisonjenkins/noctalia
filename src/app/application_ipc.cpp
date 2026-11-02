@@ -781,7 +781,7 @@ bool Application::runIdleAction(const IdleActionRequest& action) {
     if (!m_configService.isLockScreenEnabled()) {
       return true;
     }
-    return m_sessionActionRunner.lock();
+    return m_sessionActionRunner.lockForIdle();
   case IdleActionKind::ScreenOff:
     return setOutputPower(false);
   case IdleActionKind::ScreenOn:
